@@ -5,12 +5,7 @@ namespace Infrastructure.Implementation
 {
     public class LinuxProcessService : IProcessService
     {
-        public ProcessDto GetProcessByName(string name)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public bool IsProcessExist(ProcessDto process)
+        public ICollection<ProcessDto> GetProcessByName(string name)
         {
             throw new System.NotImplementedException();
         }

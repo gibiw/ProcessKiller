@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Infrastructure.Interfaces;
@@ -7,25 +8,15 @@ namespace Infrastructure.Implementation
 {
     public class WindowsProcessService : IProcessService
     {
-        public ProcessDto GetProcessByName(string name)
+        public ICollection<ProcessDto> GetProcessByName(string name)
         {
-            var process = Process.GetProcessesByName(name)
-                .FirstOrDefault();
+            var processes = Process.GetProcessesByName(name);
 
-            if (process == null)
-            {
-                throw new ApplicationException("Process not found!");
-            }
+            var processesDto = processes
+                .Select(p => new ProcessDto(p.ProcessName, p.Id, p.StartTime))
+                .ToList();
 
-            return new ProcessDto(process.ProcessName, process.Id);
-        }
-
-        public bool IsProcessExist(ProcessDto process)
-        {
-            var proc = Process.GetProcessesByName(process.Name)
-                .FirstOrDefault(p => p.Id == process.Id);
-
-            return proc != null;
+            return processesDto;
         }
 
         public void KillProcess(ProcessDto process)

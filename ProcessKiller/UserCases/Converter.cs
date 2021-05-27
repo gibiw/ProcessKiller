@@ -1,5 +1,4 @@
-﻿using System;
-using Entities;
+﻿using Entities;
 using Infrastructure.Interfaces;
 
 namespace UserCases
@@ -12,13 +11,13 @@ namespace UserCases
             {
                 Name = processDto.Name,
                 Id = processDto.Id,
-                StartTimeOfMonitoring = DateTime.Now
+                StartTime = processDto.StartTime
             };
-        } 
-        
+        }
+
         public static ProcessDto ConvertToDto(this Process process)
         {
-            return new ProcessDto(process.Name, process.Id);
-        } 
+            return new ProcessDto(process.Name, process.Id, process.StartTime);
+        }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Entities;
 using Infrastructure.Interfaces;
@@ -24,21 +26,27 @@ namespace UserCases
 
             try
             {
-                var process = GetProcess();
-
-                do
+                while (true)
                 {
-                    _logger.LogInfo("Checking process");
+                    var processes = GetProcesses();
 
-                    if (!CheckProcessExist(process)) return;
-
-                    if (NeedToKillProcess(process))
+                    if (processes.Count == 0)
                     {
-                        KillProcess(process);
+                        _logger.LogInfo($"Processes with name {_processManagerConfig.ProcessName} not found");
+                    }
+                    
+                    foreach (var process in processes)
+                    {
+                        _logger.LogInfo($"Checking process {process.Name}:{process.Id}");
+
+                        if (NeedToKillProcess(process))
+                        {
+                            KillProcess(process);
+                        }
                     }
 
                     Task.Delay(TimeSpan.FromMinutes(_processManagerConfig.CheckInterval)).Wait();
-                } while (CheckProcessExist(process));
+                }
             }
             catch (Exception e)
             {
@@ -46,39 +54,29 @@ namespace UserCases
             }
         }
 
-        private bool CheckProcessExist(Process process)
-        {
-            if (_processService.IsProcessExist(process.ConvertToDto()))
-            {
-                return true;
-            }
-
-            _logger.LogInfo("Process not exists");
-            
-            return false;
-        }
-
-        private Process GetProcess()
+        private ICollection<Process> GetProcesses()
         {
             _logger.LogInfo($"Getting process with name {_processManagerConfig.ProcessName}");
 
             var processDto = _processService.GetProcessByName(_processManagerConfig.ProcessName);
 
-            return processDto.ConvertToModel();
+            var processes = processDto
+                .Select(p => p.ConvertToModel())
+                .ToList();
+
+            return processes;
         }
 
         private bool NeedToKillProcess(Process process)
         {
-            return DateTime.Now - process.StartTimeOfMonitoring > TimeSpan.FromMinutes(_processManagerConfig.TimeToLive);
+            return DateTime.Now - process.StartTime > TimeSpan.FromMinutes(_processManagerConfig.TimeToLive);
         }
 
         private void KillProcess(Process process)
         {
             _logger.LogInfo($"Killing process {process.Name}:{process.Id}");
 
-            var proc = new ProcessDto(process.Name, process.Id);
-
-            _processService.KillProcess(proc);
+            _processService.KillProcess(process.ConvertToDto());
         }
     }
 }
